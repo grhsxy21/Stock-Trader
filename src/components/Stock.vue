@@ -3,7 +3,7 @@
    <v-card color="blue-grey" class="lighten-5">
       <v-card-title primary-title>
       <div class="headline">{{stock.name}}</div>&nbsp;&nbsp;
-      <div>(Price: {{stock.price}})</div>
+      <!--div>(Price: {{stock.price}})</div-->
       </v-card-title>
       <v-card-actions>
       <v-flex xs6>
