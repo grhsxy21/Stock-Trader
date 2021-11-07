@@ -1,15 +1,9 @@
 export const state = {
-    /*stocks: [
+    stocks: [
         { name: "BMW", price: 75 },
         { name: "Google", price: 75 },
         { name: "Apple", price: 75 },
         { name: "Twitter", price: 75 }
-    ]*/
-    stocks: [
-        { name: "BMW"},
-        { name: "Google"},
-        { name: "Apple"},
-        { name: "Twitter"}
     ]
 };
 
