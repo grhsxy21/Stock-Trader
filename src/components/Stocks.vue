@@ -5,16 +5,32 @@
         style="min-height: 0;"
         grid-list-lg
     >
-        <h1>Stocks</h1>
-        <!--下拉菜单选择器-->
-        <el-select v-model="value" filterable placeholder="Please choose a stock" @change="getData">
-            <el-option
-                v-for="stock in stocks"
-                :key="stock.name"
-                :label="stock.name"
-                :value="stock.name">
-            </el-option>
-        </el-select>
+        <!--h1>Stocks</h1-->
+    <v-card>
+        <v-card-actions>
+            <v-flex xs3>
+                <!--下拉菜单选择器-->
+                <el-select v-model="value" filterable placeholder="Please choose a stock" @change="getData">
+                    <el-option
+                        v-for="stock in stocks"
+                        :key="stock.name"
+                        :label="stock.name"
+                        :value="stock.name">
+                    </el-option>
+                </el-select>
+            </v-flex>
+            <v-flex xs2>
+                <v-card-text class="headline font-weight-bold">持有: {{holdmoney | dollarFormat}}</v-card-text>
+            </v-flex>
+            <v-flex xs2>
+                <v-card-text class="headline font-weight-bold">持有 {{holdshare}} 股</v-card-text>
+            </v-flex>
+            <v-flex xs2>
+                <v-card-text class="headline font-weight-bold">股价: {{stockprice | dollarFormat}}</v-card-text>
+            </v-flex>
+        </v-card-actions>
+
+
 
         <!--v-layout row wrap>
             <app-stock v-for="(stock,index) in stocks" :stock="stock" :key="index"></app-stock>
@@ -47,13 +63,43 @@
                     自定义
                 </button>
                 </div>
-            </Layout>
+        </Layout>
+
+        <v-card-actions>
+            <v-flex xs2>
+                <v-text-field
+                name="input-1-3"
+                label="Quantity"
+                single-line
+                v-model="buy_quantity"
+                type="number"
+                ></v-text-field>
+            </v-flex>
+            <v-flex xs1>
+                <v-btn @click="buy">Buy</v-btn>
+            </v-flex>
+            <v-flex xs2>
+                <v-text-field
+                name="input-1-3"
+                label="Quantity"
+                single-line
+                v-model="sell_quantity"
+                type="number"
+                ></v-text-field>
+            </v-flex>
+            <v-flex xs1>
+                <v-btn @click="sell">Sell</v-btn>
+            </v-flex>
+        </v-card-actions>
+    </v-card>
+
     </v-container>
 </div>
 </template>
 
 <script>
 import Stock from "./Stock.vue";
+import store from "../store/store.js"
 import {dispose, init} from 'klinecharts'
 import generatedKLineDataList from '../generatedKLineDataList'
 import Layout from "@/Layout"
@@ -102,42 +148,110 @@ export default {
     },
     data:function () {
         return {
-        value: null,
-        mainTechnicalIndicatorTypes: ['MA', 'EMA', 'SAR'],
-        subTechnicalIndicatorTypes: ['VOL', 'MACD', 'KDJ']
+            //id:this.$store.state.id,    //*用户标识
+            id:this.$store.getters.id,    //*用户标识
+            holdmoney: 0,    //单支股票持有总金额
+            holdshare: 0,   //每支股票持有股数
+            stockprice: 0,   //每支股票股价
+            stockvalue: "", //股票名
+            buy_quantity: null,
+            sell_quantity: null,
+            value: null,
+            mainTechnicalIndicatorTypes: ['MA', 'EMA', 'SAR'],
+            subTechnicalIndicatorTypes: ['VOL', 'MACD', 'KDJ']
         }
     },
     mounted: function () {
         this.kLineChart = init('technical-indicator-k-line')
         this.kLineChart.addTechnicalIndicatorTemplate(emojiTechnicalIndicator)
         this.paneId = this.kLineChart.createTechnicalIndicator('VOL', false)
-        this.kLineChart.applyNewData(generatedKLineDataList())  //TODO  改变股票数据来源
-        /*this.kLineChart.applyNewData([
-            {
-                "open": 4970.997992858794,
-                "low": 4966.937814466397,
-                "high": 4970.997992858794,
-                "close": 4970.480678335647,
-                "volume": 25.6146840653709,
-                "timestamp": 1635288360000,
-                "turnover": 127301.23031796007
-            },
-            {
-                "open": 4975.863149221486,
-                "low": 4975.863149221486,
-                "high": 4982.297215667147,
-                "close": 4977.17610249221,
-                "volume": 17.61107937689912,
-                "timestamp": 1635288420000,
-                "turnover": 87664.42923431675
-            }
-        ])*/
+        /*this.kLineChart.applyNewData(generatedKLineDataList())*/  //TODO  改变股票数据来源
         //console.log(generatedKLineDataList())
     },
     methods: {
-        getData(value){
-            //console.log(value)
-            //TODO  获取股票数据
+        getData(value){ //*选中值发生变化时触发,回调参数为目前的选中值
+            this.stockvalue=value
+            //console.log(this.stockvalue)
+            //*获取股票数据
+            let data = {'id':value}
+            /*接口请求*/
+            this.axios.post('/api/post/inquiry',data).then((res)=>{
+                console.log('res=>',res)
+                this.share=res.share
+                //this.kLineChart.applyNewData(res.data)
+            })
+            
+            this.kLineChart.applyNewData(generatedKLineDataList())
+            /*this.kLineChart.applyNewData([
+                {
+                    "open": 4970.997992858794,
+                    "low": 4966.937814466397,
+                    "high": 4970.997992858794,
+                    "close": 4970.480678335647,
+                    "volume": 25.6146840653709,
+                    "timestamp": 1635288360000,
+                    "turnover": 127301.23031796007
+                },
+                {
+                    "open": 4975.863149221486,
+                    "low": 4975.863149221486,
+                    "high": 4982.297215667147,
+                    "close": 4977.17610249221,
+                    "volume": 17.61107937689912,
+                    "timestamp": 1635288420000,
+                    "turnover": 87664.42923431675
+                }
+            ])*/
+            /*接口请求*/
+            this.axios.post('/api/post/stock_data',data).then((res)=>{
+                console.log('res=>',res)
+                this.holdmoney=res.holdmoney    //*单支股票持有总金额
+                this.holdshare=res.holdshare    //*每支股票持有股数
+                this.stockprice=res.stockprice  //*每支股票股价
+            })
+        },
+        buy() {
+            if(this.buy_quantity==null || this.buy_quantity <= 0){
+                //console.log(this.$store.getters.id)
+                alert("请输入正确的买入数量")
+            }
+            else {
+                //TODO
+                //console.log("buy")
+                let data = {'id':this.id,'stockvalue':this.stockvalue,'buy_quantity':this.buy_quantity}
+                //*用户ID、股票名、买入数量
+                /*接口请求*/
+                this.axios.post('/api/post/buy',data).then((res)=>{
+                    //console.log(res)
+                    if(res.data == -1){
+                        alert("金额不足，买入失败")
+                    }else{
+                        this.$store.commit('buy',{ stockprice: this.stockprice, quantity: parseInt(this.quantity,10) });
+                        alert("买入成功")
+                    }
+                })
+            }
+        },
+        sell() {
+            if (this.sell_quantity==null || this.sell_quantity <= 0){
+                alert("请输入正确的卖出数量")
+            }
+            else {
+                //TODO
+                //console.log("sell")
+                let data = {'id':this.id,'stockvalue':this.stockvalue,'sell_quantity':this.sell_quantity}
+                /*接口请求*/
+                this.axios.post('/api/post/sell',data).then((res)=>{
+                    //console.log(res)
+                    /*接口的传值是(-1,该用户不存在),(0,密码错误)*/
+                    if(res.data == -1){
+                        alert("持有股票不足，卖出失败")
+                    }else{
+                        this.$store.commit('sell',{ stockprice: this.stockprice, quantity: parseInt(this.quantity,10) });
+                        alert("卖出成功")
+                    }
+                })
+            }
         },
         setCandleTechnicalIndicator: function (type) {
             this.kLineChart.createTechnicalIndicator(type, false, { id: 'candle_pane' })

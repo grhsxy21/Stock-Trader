@@ -9,7 +9,10 @@ export const state = {
         { name: "BMW"},
         { name: "Google"},
         { name: "Apple"},
-        { name: "Twitter"}
+        { name: "Twitter"},
+        { name: "Facebook"},
+        { name: "Alibaba"},
+        { name: "Firefox"}
     ]
 };
 

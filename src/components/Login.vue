@@ -22,6 +22,7 @@
 
 
 <script>
+import store from '../store/store.js'
 export default{
     data(){
         return{
@@ -39,6 +40,7 @@ export default{
     methods: {
         login(){
         if(this.username == "" || this.password == ""){
+            //this.$store.commit('refresh',{ id: this.username })
             alert("请输入用户名或密码")
         }else{
             let data = {'id':this.username,'password':this.password}
@@ -56,6 +58,9 @@ export default{
                   this.tishi = "登录成功"
                   this.showTishi = true
                   setTimeout(function(){
+                      //!读取剩余资产和持有股票
+                      this.$store.commit('refresh_asset',{ funds: res.funds, asset: res.asset})
+                      this.$store.commit('refresh',{ id: this.username })   //*存储id到vuex
                       this.$router.push('/home')
                   }.bind(this),1000)
               }
@@ -74,7 +79,7 @@ export default{
                 this.showTishi = true
                 this.username = ''
                 this.password = ''
-                 /*注册成功之后再跳回登录页*/
+                /*注册成功之后再跳回登录页*/
                 setTimeout(function(){
                     this.showRegister = false
                     this.showLogin = true

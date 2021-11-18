@@ -14,7 +14,8 @@
                 <v-icon>mdi-restore</v-icon>
             </v-btn>
             &nbsp;&nbsp;&nbsp;&nbsp;
-            Funds: {{ funds | dollarFormat }} &nbsp;&nbsp;&nbsp;&nbsp;
+            剩余资产: {{ funds | dollarFormat }} &nbsp;
+            持有股票: {{ asset | dollarFormat }} &nbsp;&nbsp;&nbsp;&nbsp;
         </v-app-bar>
         <v-navigation-drawer
             clipped
@@ -92,6 +93,9 @@
         computed: {
             funds() {
                 return this.$store.getters.funds;
+            },
+            asset() {
+                return this.$store.getters.asset;
             }
         },
         methods: {
