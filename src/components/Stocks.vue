@@ -154,8 +154,11 @@ export default {
             holdshare: 0,   //每支股票持有股数
             stockprice: 0,   //每支股票股价
             stockvalue: "", //股票名
+            stockid: "",    //股票id
             buy_quantity: null,
             sell_quantity: null,
+            startdata: "20180101",
+            enddata: "",
             value: null,
             mainTechnicalIndicatorTypes: ['MA', 'EMA', 'SAR'],
             subTechnicalIndicatorTypes: ['VOL', 'MACD', 'KDJ']
@@ -172,16 +175,25 @@ export default {
         getData(value){ //*选中值发生变化时触发,回调参数为目前的选中值
             this.stockvalue=value
             //console.log(this.stockvalue)
+            //*根据股票名过去股票id
+            //console.log(this.$store.getters.getId(this.stockvalue)[0].id)
+            this.stockid = this.$store.getters.getId(this.stockvalue)[0].id
+            var date = new Date();
+            //获取完整的年份(4位)   获取当前日(1-31)
+            this.enddata=date.getFullYear().toString() + (date.getMonth() + 1).toString() + date.getDate().toString()
+            //console.log(this.enddata)
+            //console.log(date.getMonth().toString())   //获取当前月份(0-11,0代表1月)
             //*获取股票数据
-            let data = {'id':value}
+            let data = {'id': value, "start": this.startdata, "end": this.enddata}
             /*接口请求*/
-            this.axios.post('/api/post/inquiry',data).then((res)=>{
+            this.axios.post('/api/post/DrawK',data).then((res)=>{
                 console.log('res=>',res)
                 this.share=res.share
                 //this.kLineChart.applyNewData(res.data)
             })
             
-            this.kLineChart.applyNewData(generatedKLineDataList())
+            //this.kLineChart.applyNewData(generatedKLineDataList())
+            this.kLineChart.applyNewData(this.share)
             /*this.kLineChart.applyNewData([
                 {
                     "open": 4970.997992858794,
@@ -203,11 +215,12 @@ export default {
                 }
             ])*/
             /*接口请求*/
-            this.axios.post('/api/post/stock_data',data).then((res)=>{
+            let dataholding = {'id': value}
+            this.axios.post('/api/post/holdings', dataholding).then((res)=>{
                 console.log('res=>',res)
-                this.holdmoney=res.holdmoney    //*单支股票持有总金额
-                this.holdshare=res.holdshare    //*每支股票持有股数
-                this.stockprice=res.stockprice  //*每支股票股价
+                this.holdmoney=res[0].BoughtTotalPrice    //*单支股票持有总金额
+                this.holdshare=res[0].StockAmount    //*每支股票持有股数
+                this.stockprice=res[0].BoughtPrice  //*每支股票股价
             })
         },
         buy() {
@@ -218,8 +231,8 @@ export default {
             else {
                 //TODO
                 //console.log("buy")
-                let data = {'id':this.id,'stockvalue':this.stockvalue,'buy_quantity':this.buy_quantity}
-                //*用户ID、股票名、买入数量
+                let data = {'id':this.id,'stockvalue':this.stockid, 'stockname':this.stockvalue, 'buy_quantity':this.buy_quantity}
+                //*用户ID、股票id、股票名、买入数量
                 /*接口请求*/
                 this.axios.post('/api/post/buy',data).then((res)=>{
                     //console.log(res)
@@ -239,7 +252,7 @@ export default {
             else {
                 //TODO
                 //console.log("sell")
-                let data = {'id':this.id,'stockvalue':this.stockvalue,'sell_quantity':this.sell_quantity}
+                let data = {'id':this.id,'stockvalue':this.stockid,'sell_quantity':this.sell_quantity}
                 /*接口请求*/
                 this.axios.post('/api/post/sell',data).then((res)=>{
                     //console.log(res)

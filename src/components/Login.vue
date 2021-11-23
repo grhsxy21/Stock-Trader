@@ -72,7 +72,7 @@ export default{
         alert("请输入用户名或密码")
     }else{
         let data = {'username':this.newUsername,'password':this.newPassword,'id':this.newUsername}
-        this.axios.post('/api/post/register',data).then((res)=>{
+        this.axios.post('http://127.0.0.1:8000/post/register',data).then((res)=>{
             console.log(res)
             if(res.data == "ok"){
                 this.tishi = "注册成功"
