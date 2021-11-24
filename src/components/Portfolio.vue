@@ -17,6 +17,7 @@
 <script>
 import Investment from "./Investment.vue";
 import store from "../store/store.js"
+import qs from 'qs'
 
 export default {
     components: {
@@ -26,11 +27,13 @@ export default {
         portfolio() {
             //console.log(this.$store.getters.portfolio)
             //return this.$store.getters.portfolio;
+            let portfolio = [{"name": "Apple","quantity": 5,"price": 75}, {"name": "Twitter","quantity": 5,"price": 75}]
             //TODO  获取用户持仓
-            let data = {'id':value}
-            this.axios.post('/api/post/position',data).then((res)=>{
+            let headers = {'content-type': 'application/x-www-form-urlencoded; charset = UTF-8'}
+            let data = {'id':this.$store.getters.id}
+            this.axios.post('http://127.0.0.1:8000/post/holdings',qs.stringify(data), {headers: headers}).then((res)=>{
                 console.log('res=>',res)
-                return res
+                return portfolio
                 //*name股票名 price当前价格 quantity持有股票数
             })
             /*[

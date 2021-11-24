@@ -103,6 +103,7 @@ import store from "../store/store.js"
 import {dispose, init} from 'klinecharts'
 import generatedKLineDataList from '../generatedKLineDataList'
 import Layout from "@/Layout"
+import qs from 'qs'
 
     const fruits = [
         '🍏', '🍎', '🍐', '🍊', '🍋', '🍌',
@@ -152,12 +153,13 @@ export default {
             id:this.$store.getters.id,    //*用户标识
             holdmoney: 0,    //单支股票持有总金额
             holdshare: 0,   //每支股票持有股数
-            stockprice: 0,   //每支股票股价
+            BoughtPrice: 0, //每支股票股价
+            stockprice: 0,   
             stockvalue: "", //股票名
             stockid: "",    //股票id
             buy_quantity: null,
             sell_quantity: null,
-            startdata: "20180101",
+            startdata: "20210101",
             enddata: "",
             value: null,
             mainTechnicalIndicatorTypes: ['MA', 'EMA', 'SAR'],
@@ -173,27 +175,31 @@ export default {
     },
     methods: {
         getData(value){ //*选中值发生变化时触发,回调参数为目前的选中值
+            //console.log(this.id)
             this.stockvalue=value
             //console.log(this.stockvalue)
-            //*根据股票名过去股票id
+            //*根据股票名获取股票id
             //console.log(this.$store.getters.getId(this.stockvalue)[0].id)
             this.stockid = this.$store.getters.getId(this.stockvalue)[0].id
             var date = new Date();
             //获取完整的年份(4位)   获取当前日(1-31)
             this.enddata=date.getFullYear().toString() + (date.getMonth() + 1).toString() + date.getDate().toString()
-            //console.log(this.enddata)
+            //console.log("enddata:",this.enddata)
             //console.log(date.getMonth().toString())   //获取当前月份(0-11,0代表1月)
             //*获取股票数据
-            let data = {'id': value, "start": this.startdata, "end": this.enddata}
+            let headers = {'content-type': 'application/x-www-form-urlencoded; charset = UTF-8'}
+            let data = {'id': this.stockid, "start": this.startdata, "end": this.enddata}
             /*接口请求*/
-            this.axios.post('/api/post/DrawK',data).then((res)=>{
+            this.axios.post('http://127.0.0.1:8000/post/DrawK',qs.stringify(data), {headers: headers}).then((res)=>{
                 console.log('res=>',res)
-                this.share=res.share
+                this.share=res.data.share
+                this.stockprice=res.data.share[this.share.length-1].close
+                this.kLineChart.applyNewData(this.share)
+                //console.log("stockprice:",this.stockprice)
                 //this.kLineChart.applyNewData(res.data)
             })
             
             //this.kLineChart.applyNewData(generatedKLineDataList())
-            this.kLineChart.applyNewData(this.share)
             /*this.kLineChart.applyNewData([
                 {
                     "open": 4970.997992858794,
@@ -214,13 +220,17 @@ export default {
                     "turnover": 87664.42923431675
                 }
             ])*/
-            /*接口请求*/
-            let dataholding = {'id': value}
-            this.axios.post('/api/post/holdings', dataholding).then((res)=>{
+            //TODO
+            let dataholding = {'userid': this.id}
+            this.axios.post('http://127.0.0.1:8000/post/holdings', qs.stringify(dataholding), {headers: headers}).then((res)=>{
                 console.log('res=>',res)
-                this.holdmoney=res[0].BoughtTotalPrice    //*单支股票持有总金额
-                this.holdshare=res[0].StockAmount    //*每支股票持有股数
-                this.stockprice=res[0].BoughtPrice  //*每支股票股价
+                for(let i=0; i<res.length; i++){
+                    if(res[i].ID == this.stockid){
+                        this.holdmoney=res.BoughtTotalPrice    //*单支股票持有总金额
+                        this.holdshare=res.StockAmount    //*每支股票持有股数
+                        this.BoughtPrice=res.BoughtPrice  //*每支股票股价
+                    }
+                }
             })
         },
         buy() {
@@ -229,20 +239,27 @@ export default {
                 alert("请输入正确的买入数量")
             }
             else {
-                //TODO
-                //console.log("buy")
-                let data = {'id':this.id,'stockvalue':this.stockid, 'stockname':this.stockvalue, 'buy_quantity':this.buy_quantity}
-                //*用户ID、股票id、股票名、买入数量
-                /*接口请求*/
-                this.axios.post('/api/post/buy',data).then((res)=>{
-                    //console.log(res)
-                    if(res.data == -1){
-                        alert("金额不足，买入失败")
-                    }else{
-                        this.$store.commit('buy',{ stockprice: this.stockprice, quantity: parseInt(this.quantity,10) });
-                        alert("买入成功")
-                    }
-                })
+                if(this.stockid==""){
+                    alert("请选择要买入的股票")
+                }
+                else{
+                    //TODO
+                    //console.log("buy")
+                    let headers = {'content-type': 'application/x-www-form-urlencoded; charset = UTF-8'}
+                    let data = {'id':this.id,'stockvalue':this.stockid, 'stockname':this.stockvalue, 'buy_quantity':this.buy_quantity}
+                    //*用户ID、股票id、股票名、买入数量
+                    /*接口请求*/
+                    this.axios.post('http://127.0.0.1:8000/post/buy',qs.stringify(data), {headers: headers}).then((res)=>{
+                        console.log('res=>', res)
+                        if(res.data.data == -1){
+                            alert("金额不足，买入失败")
+                        }else{
+                            this.$store.commit('buy',{ stockprice: this.stockprice, quantity: this.quantity });
+                            this.buy_quantity=null;
+                            alert("买入成功")
+                        }
+                    })
+                }
             }
         },
         sell() {
@@ -250,20 +267,25 @@ export default {
                 alert("请输入正确的卖出数量")
             }
             else {
-                //TODO
-                //console.log("sell")
-                let data = {'id':this.id,'stockvalue':this.stockid,'sell_quantity':this.sell_quantity}
-                /*接口请求*/
-                this.axios.post('/api/post/sell',data).then((res)=>{
-                    //console.log(res)
-                    /*接口的传值是(-1,该用户不存在),(0,密码错误)*/
-                    if(res.data == -1){
-                        alert("持有股票不足，卖出失败")
-                    }else{
-                        this.$store.commit('sell',{ stockprice: this.stockprice, quantity: parseInt(this.quantity,10) });
-                        alert("卖出成功")
-                    }
-                })
+                if(this.stockid==""){
+                    alert("请选择要卖出的股票")
+                }
+                else{
+                    let headers = {'content-type': 'application/x-www-form-urlencoded; charset = UTF-8'}
+                    let data = {'id':this.id,'stockvalue':this.stockid,'sell_quantity':this.sell_quantity}
+                    /*接口请求*/
+                    this.axios.post('http://127.0.0.1:8000/post/sell',qs.stringify(data), {headers: headers}).then((res)=>{
+                        console.log('res=>', res)
+                        /*接口的传值是(-1,该用户不存在),(0,密码错误)*/
+                        if(res.data.data == -1){
+                            alert("持有股票不足，卖出失败")
+                        }else{
+                            this.$store.commit('sell',{ stockprice: this.stockprice, quantity: this.quantity});
+                            this.sell_quantity=null;
+                            alert("卖出成功")
+                        }
+                    })
+                }
             }
         },
         setCandleTechnicalIndicator: function (type) {

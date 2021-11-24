@@ -23,6 +23,7 @@
 
 <script>
 import store from '../store/store.js'
+import qs from 'qs'
 export default{
     data(){
         return{
@@ -43,24 +44,29 @@ export default{
             //this.$store.commit('refresh',{ id: this.username })
             alert("请输入用户名或密码")
         }else{
+            let headers = {'content-type': 'application/x-www-form-urlencoded; charset = UTF-8'}
             let data = {'id':this.username,'password':this.password}
             /*接口请求*/
-            this.axios.post('/api/post/login',data).then((res)=>{
+            this.axios.post('http://127.0.0.1:8000/post/login',qs.stringify(data), {headers: headers}).then((res)=>{
                 console.log(res)
              /*接口的传值是(-1,该用户不存在),(0,密码错误)*/
-              if(res.data == -1){
+              if(res.data.data == -1){
                   this.tishi = "该用户不存在"
                   this.showTishi = true
-              }else if(res.data == 0){
+              }else if(res.data.data == 0){
                   this.tishi = "密码输入错误"
                   this.showTishi = true
               }else{
                   this.tishi = "登录成功"
                   this.showTishi = true
+                  //!读取剩余资产和持有股票
+                  //console.log("funds:",res.data.funds)
+                  //console.log("id:",res.data.id)
+                  console.log("asset:",res.data.asset)  //TODO
+                  //console.log("data:",res.data.data)
+                  this.$store.commit('refresh',{ id: res.data.id })   //*存储id到vuex
+                  this.$store.commit('refresh_asset',{ funds: res.data.funds, asset: res.data.asset})
                   setTimeout(function(){
-                      //!读取剩余资产和持有股票
-                      this.$store.commit('refresh_asset',{ funds: res.funds, asset: res.asset})
-                      this.$store.commit('refresh',{ id: this.username })   //*存储id到vuex
                       this.$router.push('/home')
                   }.bind(this),1000)
               }
@@ -71,10 +77,11 @@ export default{
     if(this.newUsername == "" || this.newPassword == ""){
         alert("请输入用户名或密码")
     }else{
+        let headers = {'content-type': 'application/x-www-form-urlencoded; charset = UTF-8'}
         let data = {'username':this.newUsername,'password':this.newPassword,'id':this.newUsername}
-        this.axios.post('http://127.0.0.1:8000/post/register',data).then((res)=>{
+        this.axios.post('http://127.0.0.1:8000/post/register',qs.stringify(data), {headers: headers}).then((res)=>{
             console.log(res)
-            if(res.data == "ok"){
+            if(res.data.data == "ok"){
                 this.tishi = "注册成功"
                 this.showTishi = true
                 this.username = ''

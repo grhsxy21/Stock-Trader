@@ -1,5 +1,5 @@
 const state = {
-    funds: 10000,
+    funds: 0,
     asset: 0,
     portfolio: [
         { name: "BMW", quantity: 0, stock: null },
