@@ -42,7 +42,9 @@ export default {
             //TODO   传递用户id
             //console.log("sell")
             let headers = {'content-type': 'application/x-www-form-urlencoded; charset = UTF-8'}
-            let data = {'id':this.$store.getters.id,'stockvalue':this.investment.name,'sell_quantity':this.quantity}
+            //*根据股票名获取股票id
+            this.stockid = this.$store.getters.getId(this.investment.name)[0].id
+            let data = {'id':this.$store.getters.id,'stockvalue':this.stockid,'sell_quantity':this.quantity}
             /*接口请求*/
             this.axios.post('http://127.0.0.1:8000/post/sell',qs.stringify(data), {headers: headers}).then((res)=>{
                //console.log(res)
@@ -50,7 +52,7 @@ export default {
                if(res.data.data == -1){
                   alert("持有股票不足，卖出失败")
                }else{
-                  this.$store.commit('sell',{ stockprice: this.stockprice, quantity: this.quantity});
+                  this.$store.commit('sell',{ stockprice: this.investment.price, quantity: this.quantity}); //TODO
                   alert("卖出成功")
                }
             })

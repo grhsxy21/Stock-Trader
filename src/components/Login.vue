@@ -65,7 +65,8 @@ export default{
                   console.log("asset:",res.data.asset)  //TODO
                   //console.log("data:",res.data.data)
                   this.$store.commit('refresh',{ id: res.data.id })   //*存储id到vuex
-                  this.$store.commit('refresh_asset',{ funds: res.data.funds, asset: res.data.asset})
+                  this.$store.commit('refresh_asset',{ funds: res.data.funds})
+                  //this.$store.commit('refresh_asset',{ funds: res.data.funds, asset: res.data.asset})
                   setTimeout(function(){
                       this.$router.push('/home')
                   }.bind(this),1000)

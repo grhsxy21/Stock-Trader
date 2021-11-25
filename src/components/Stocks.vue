@@ -19,13 +19,13 @@
                     </el-option>
                 </el-select>
             </v-flex>
-            <v-flex xs2>
+            <!--v-flex xs2>
                 <v-card-text class="headline font-weight-bold">持有: {{holdmoney | dollarFormat}}</v-card-text>
-            </v-flex>
+            </v-flex-->
             <v-flex xs2>
                 <v-card-text class="headline font-weight-bold">持有 {{holdshare}} 股</v-card-text>
             </v-flex>
-            <v-flex xs2>
+            <v-flex xs3>
                 <v-card-text class="headline font-weight-bold">股价: {{stockprice | dollarFormat}}</v-card-text>
             </v-flex>
         </v-card-actions>
@@ -193,6 +193,23 @@ export default {
             this.axios.post('http://127.0.0.1:8000/post/DrawK',qs.stringify(data), {headers: headers}).then((res)=>{
                 console.log('res=>',res)
                 this.share=res.data.share
+                //console.log("length=>",this.share.length)
+                //console.log("length=>",parseInt(this.share[0].timestamp))
+                for(let i=0; i<this.share.length; i++){
+                    var timest=this.share[i].timestamp.slice(0, 4) + "-" + this.share[i].timestamp.slice(4)
+                    timest=timest.slice(0, 7) + "-" + timest.slice(7)
+                    timest=timest + " 15:00:00"
+                    this.share[i].timestamp = new Date(timest).getTime()
+                }
+                //console.log(this.share)
+                /*var timest=this.share[0].timestamp.slice(0, 4) + "-" + this.share[0].timestamp.slice(4)
+                timest=timest.slice(0, 7) + "-" + timest.slice(7)
+                timest=timest + " 15:00:00"
+                console.log(timest)
+                console.log(new Date(timest).getTime())*/
+                //var newmonth=insertStr(this.share[0].timestamp,4,"-");
+                //console.log(new Date('2020-3-14 15:00:00').getTime())
+
                 this.stockprice=res.data.share[this.share.length-1].close
                 this.kLineChart.applyNewData(this.share)
                 //console.log("stockprice:",this.stockprice)
@@ -221,14 +238,15 @@ export default {
                 }
             ])*/
             //TODO
-            let dataholding = {'userid': this.id}
+            let dataholding = {'id': this.id}
             this.axios.post('http://127.0.0.1:8000/post/holdings', qs.stringify(dataholding), {headers: headers}).then((res)=>{
-                console.log('res=>',res)
-                for(let i=0; i<res.length; i++){
-                    if(res[i].ID == this.stockid){
-                        this.holdmoney=res.BoughtTotalPrice    //*单支股票持有总金额
-                        this.holdshare=res.StockAmount    //*每支股票持有股数
-                        this.BoughtPrice=res.BoughtPrice  //*每支股票股价
+                console.log('res_stock=>',res)
+                //console.log(res.data.res)
+                for(let i=0; i<res.data.res.length; i++){
+                    if(res.data.res[i].StockID == this.stockid){
+                        //this.holdmoney=res.BoughtTotalPrice    //*单支股票持有总金额
+                        this.holdshare=res.data.res.StockAmount    //*每支股票持有股数
+                        this.BoughtPrice=res.data.res.BoughtPrice  //*每支股票股价
                     }
                 }
             })
@@ -254,9 +272,11 @@ export default {
                         if(res.data.data == -1){
                             alert("金额不足，买入失败")
                         }else{
-                            this.$store.commit('buy',{ stockprice: this.stockprice, quantity: this.quantity });
+                            this.$store.commit('buy',{ stockprice: this.stockprice, quantity: this.buy_quantity });
                             this.buy_quantity=null;
                             alert("买入成功")
+                            //this.$router.push('/stocks')
+                            //window.loacation.reload()
                         }
                     })
                 }
@@ -280,7 +300,7 @@ export default {
                         if(res.data.data == -1){
                             alert("持有股票不足，卖出失败")
                         }else{
-                            this.$store.commit('sell',{ stockprice: this.stockprice, quantity: this.quantity});
+                            this.$store.commit('sell',{ stockprice: this.stockprice, quantity: this.sell_quantity});
                             this.sell_quantity=null;
                             alert("卖出成功")
                         }
