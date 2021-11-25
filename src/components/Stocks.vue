@@ -26,7 +26,7 @@
                 <v-card-text class="headline font-weight-bold">持有 {{holdshare}} 股</v-card-text>
             </v-flex>
             <v-flex xs3>
-                <v-card-text class="headline font-weight-bold">股价: {{stockprice | dollarFormat}}</v-card-text>
+                <v-card-text class="headline font-weight-bold">股价: {{BoughtPrice | dollarFormat}}</v-card-text>
             </v-flex>
         </v-card-actions>
 
@@ -245,8 +245,9 @@ export default {
                 for(let i=0; i<res.data.res.length; i++){
                     if(res.data.res[i].StockID == this.stockid){
                         //this.holdmoney=res.BoughtTotalPrice    //*单支股票持有总金额
-                        this.holdshare=res.data.res.StockAmount    //*每支股票持有股数
-                        this.BoughtPrice=res.data.res.BoughtPrice  //*每支股票股价
+                        //console.log(res.data.res[i].StockAmount)
+                        this.holdshare=res.data.res[i].StockAmount    //*每支股票持有股数
+                        this.BoughtPrice=res.data.res[i].BoughtPrice  //*每支股票股价
                     }
                 }
             })
