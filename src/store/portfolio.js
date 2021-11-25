@@ -2,10 +2,10 @@ const state = {
     funds: 0,
     asset: 0,
     portfolio: [
-        { name: "BMW", quantity: 0, stock: null },
-        { name: "Google", quantity: 0, stock: null },
-        { name: "Apple", quantity: 0, stock: null },
-        { name: "Twitter", quantity: 0, stock: null }
+        { name: "BMW", quantity: 0, price: 0 },
+        { name: "Google", quantity: 0, price: 0 },
+        { name: "Apple", quantity: 0, price: 0 },
+        { name: "Twitter", quantity: 0, price: 0 }
     ]
 }
 
@@ -35,6 +35,9 @@ const mutations = {
     refresh_asset: (state, payload) => {
         state.funds = payload.funds;
         state.asset = payload.asset;
+    },
+    refresh_portfolio: (state, payload) => {
+        state.portfolio = payload.portfolio;
     }
 }
 

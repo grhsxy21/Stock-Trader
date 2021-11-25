@@ -83,6 +83,7 @@
 </template>
 
 <script>
+import qs from 'qs'
     export default {
         data: () => ({
             drawer: true
@@ -106,7 +107,26 @@
                 this.$store.dispatch("save");
             },
             restore() {
-                this.$store.dispatch("restore");
+                //this.$store.dispatch("restore");
+                let portfolio = []
+                //TODO  获取用户持仓
+                let headers = {'content-type': 'application/x-www-form-urlencoded; charset = UTF-8'}
+                let data = {'id':this.$store.getters.id}
+                this.axios.post('http://127.0.0.1:8000/post/holdings',qs.stringify(data), {headers: headers}).then((res)=>{
+                    console.log('res=>',res)
+                    //console.log("length:",res.data.res.length)
+                    for(let i=0; i<res.data.res.length; i++){
+                        let folio={"name":res.data.res[i].StockName, "quantity":res.data.res[i].StockAmount,"price":res.data.res[i].BoughtTotalPrice}
+                        portfolio.push(folio)
+                        //console.log("portfolio:",JSON.stringify(portfolio))
+                        //console.log("name:",res.data.res[i].StockName)
+                        //console.log("quantity:",res.data.res[i].StockAmount)
+                        //console.log("price:",res.data.res[i].BoughtTotalPrice)
+                    }
+                    console.log("portfolio:", portfolio)
+                    this.$store.commit('refresh_portfolio',{ portfolio: portfolio}) //存储到vuex
+                })
+                //*name股票名 price当前价格 quantity持有股票数
             }
         }
     }
